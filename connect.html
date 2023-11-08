@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CONNECT</title>
+    <style>
+	body {background-color: powderblue;}
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            margin-top: 50px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+.box {
+            width: 400px;
+            height: 50px;
+            border: 1px solid #ccc;
+            margin: 5px;
+            padding: 5px;
+        }
+        .button {
+            margin-top: 1px;
+        }
+    </style>
+</head>
+<body >
+    <h1>CONNECT</h1>
+    <div class="container">
+        <div class="box">
+            <p>
+                <span id="wifi1"> %WiFi1%</span>
+                <button class="button" onclick="fillUsername("button1")">connect</button>
+            </p>
+        </div>
+       
+    <div class="box">
+        <p><span id="wifi2"> %WiFi2%</span>
+        <button class="button" onclick ="fillUsername("button2")">Connect</button>
+    </p>
+    </div>
+    <div class="box">
+        <p><span id="wifi3"> %WiFi3%</span>
+        <button class="button" onclick ="fillUsername("button3")">Connect</button>
+    </p>
+    </div>
+    <div class="box">
+        <p><span id="wifi4"> %WiFi4%</span>
+        <button class="button" onclick ="fillUsername("button4")">Connect</button>
+    </p>
+    </div>
+    <div class="box">
+        <p><span id="wifi5"> %WiFi5%</span>
+        <button class="button" onclick ="fillUsername("button5")">Connect</button>
+    </p>
+    </div>
+    </div>
+    <form action="">
+User name:<br>
+<input type="text" name="userid" id="username">
+<br>
+User password:<br>
+<input type="password" name="psw" id=" password">
+</form>
+    <div>
+        <button class="button" id="saveButton">Save</button>
+    </div>
+<script>
+    var gateway = `ws://${window.location.hostname}/ws`;
+    var websocket;
+    window.addEventListener('load', onLoad);
+    function initWebSocket() {
+        console.log('Trying to open a WebSocket connection...');
+        websocket = new WebSocket(gateway);
+        websocket.onopen = onOpen;
+        websocket.onclose = onClose;
+        websocket.onmessage = onMessage; // <-- add this line
+    }
+    function onOpen(event) {
+        console.log('Connection opened');
+    }
+    function onClose(event) {
+        console.log('Connection closed');
+        setTimeout(initWebSocket, 2000);
+    }
+    function fillUsername(name) {
+        if (name == "button1") {
+            document.getElementById("username").id = "wifi1";
+        }
+        else if (name == button2) {
+            document.getElementById("username").innerHTML = "wifi2";
+        }
+        else if (name == button3) {
+            document.getElementById("username").innerHTML = "wifi3";
+        }
+        else if (name == button4) {
+            document.getElementById("username").innerHTML = "wifi4";
+        }
+        else if (name == button5) {
+            document.getElementById("username").innerHTML = "wifi5";
+        }
+    }
+    function onMessage(event) {
+        let ssidArray[] = = new Uint8Array(event.data);
+        document.getElementById('wifi1').innerHTML = ssidArray[0];
+        document.getElementById('wifi2').innerHTML = ssidArray[1];
+        document.getElementById('wifi3').innerHTML = ssidArray[2];
+        document.getElementById('wifi4').innerHTML = ssidArray[3];
+        document.getElementById('wifi5').innerHTML = ssidArray[4];
+    }
+    function onLoad(event) {
+        initWebSocket();
+        initButton();
+    }
+    function initButton() {
+        document.getElementById('saveButton').addEventListener('click', savePass);
+    }
+    function savePass() {
+        var username = document.getElementById('username').value;
+        var password = document.getElementById('password').value;
+        websocket.send(username);
+        websocket.send(password);
+    }
+        
+    });
+ </script>
+</body>
+</html>
