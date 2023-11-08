@@ -1,3 +1,65 @@
+#include "Arduino.h"
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+
+// Replace with your network credentials
+const char* ssid = "hyperlogy";
+const char* password = "123456789";
+
+AsyncWebServer server(80);
+AsyncWebSocket ws("/ws");
+
+struct WifiNetwork {
+    String ssid;
+    int rssi;
+    int encryptionType;
+};
+int compareNetworks(const void* a, const void* b) {
+    return ((WifiNetwork*)b)->rssi - ((WifiNetwork*)a)->rssi;
+}
+void sortNetworksByRSSI(WifiNetwork* networks, int numNetworks) {
+    qsort(networks, numNetworks, sizeof(WifiNetwork), compareNetworks);
+}
+WifiNetwork* scanAndSortWifiNetworks() {
+    Serial.println("scan start");
+
+    // WiFi.scanNetworks will return the number of networks found
+    int numNetworks = WiFi.scanNetworks();
+    Serial.println("scan done");
+
+    if (numNetworks == 0) {
+        Serial.println("No networks found");
+        return nullptr;
+    }
+    else {
+        WifiNetwork* networks = new WifiNetwork[numNetworks];
+
+        for (int i = 0; i < numNetworks; ++i) {
+            networks[i].ssid = WiFi.SSID(i);
+            networks[i].rssi = WiFi.RSSI(i);
+            networks[i].encryptionType = WiFi.encryptionType(i);
+        }
+
+        // Sắp xếp mạng Wi-Fi theo RSSI (yếu đến mạnh)
+        sortNetworksByRSSI(networks, numNetworks);
+
+        Serial.println("Networks found (sorted by RSSI strength):");
+        for (int i = 0; i < numNetworks; ++i) {
+            Serial.print(i + 1);
+            Serial.print(": ");
+            Serial.print(networks[i].ssid);
+            Serial.print(" (");
+            Serial.print(networks[i].rssi);
+            Serial.print(")");
+            Serial.println((networks[i].encryptionType == WIFI_AUTH_OPEN) ? " " : "*");
+            delay(10);
+            }
+
+        return networks;
+    }
+}
+const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html>
 <head>
@@ -129,3 +191,82 @@ User password:<br>
  </script>
 </body>
 </html>
+)rawliteral";
+/*void notifyClients() {
+  ws.textAll(String(ledState));
+}*/
+
+void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
+  AwsFrameInfo *info = (AwsFrameInfo*)arg;
+  if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+    data[len] = 0;
+    
+  }
+}
+void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type,
+             void *arg, uint8_t *data, size_t len) {
+  switch (type) {
+    case WS_EVT_CONNECT:
+      Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+      break;
+    case WS_EVT_DISCONNECT:
+      Serial.printf("WebSocket client #%u disconnected\n", client->id());
+      break;
+    case WS_EVT_DATA:
+      handleWebSocketMessage(arg, data, len);
+      break;
+    case WS_EVT_PONG:
+    case WS_EVT_ERROR:
+      break;
+  }
+}
+void initWebSocket() {
+  ws.onEvent(onEvent);
+  server.addHandler(&ws);
+}
+
+String processor(const String& var){
+  Serial.println(var);
+  WifiNetwork* ssid_scan = scanAndSortWifiNetworks();
+  String ssid=ssid_scan[0].ssid;
+  if(ssid_scan){
+  if(var == "WiFi1"){
+
+    return ssid;
+  }
+  /*else if (var == "WiFi2"){
+    return ssid_scan[1].ssid;
+  }
+  else if (var == "WiFi3"){
+    return ssid_scan[2].ssid;
+  }
+  else if (var == "WiFi4"){
+    return ssid_scan[3].ssid;
+  }
+  else if (var == "WiFi5"){
+    return ssid_scan[4].ssid;
+  }*/
+  }
+  
+} 
+void setup(){
+  Serial.begin(115200);
+  WiFi.softAP(ssid,password);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("AP IP address: ");
+  Serial.println(IP);
+  WifiNetwork* ssid_scan = scanAndSortWifiNetworks();
+  initWebSocket();
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send_P(200, "text/html", index_html, processor);
+  });
+
+  // Start server
+  server.begin();
+}
+
+void loop() {
+  ws.cleanupClients();
+  
+   delay(5000);
+}
