@@ -67,6 +67,7 @@ User password:<br>
 <input type="password" name="psw" id=" password">
 </form>
     <div>
+        <button class="button" onclick="scan()">Scan</button>
         <button class="button" id="saveButton">Save</button>
     </div>
 <script>
@@ -119,11 +120,8 @@ User password:<br>
     function initButton() {
         document.getElementById('saveButton').addEventListener('click', savePass);
     }
-    function savePass() {
-        var username = document.getElementById('username').value;
-        var password = document.getElementById('password').value;
-        websocket.send(username);
-        websocket.send(password);
+    function scan() {
+        websocket.send('scan');
     }
         
  </script>
