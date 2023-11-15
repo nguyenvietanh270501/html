@@ -1,0 +1,40 @@
+<!DOCTYPE HTML><html>
+<head>
+  <title>Wi-Fi Login Page</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+  <div class="topnav">
+    <h1>Wi-Fi Login Page</h1>
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <p><button id="scan_button" class="button">Scan</button></p>
+      <p id="list_scan"></p>
+    </div>
+
+  </div>
+
+  <div class="content">
+    <div class="card">
+      <form action="/" method="POST" id="ssid_pass">
+        <p>
+          <label for="ssid">SSID</label>
+          <input type="text" id ="ssid" name="ssid"><br>
+          <label for="pass">Password</label>
+          <input type="text" id ="pass" name="pass"><br>
+          <input type ="submit" value ="Submit">
+        </p>
+        <p id="submit_form"></p>
+        <p id="connect_result"></p>
+      </form>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

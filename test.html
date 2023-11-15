@@ -3,73 +3,155 @@
 <head>
     <title>CONNECT</title>
     <style>
-	body {background-color: powderblue;}
+        body {
+            background-color: burlywood;
+        }
+
         body {
             text-align: center;
-            font-family: Arial, sans-serif;
+            font-family: Arial,sans-serif;
         }
+
         h1 {
-            margin-top: 50px;
+            margin-top: 40px;
         }
+
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-.box {
-            width: 400px;
-            height: 50px;
-            border: 1px solid #ccc;
-            margin: 5px;
-            padding: 5px;
+        table-wifi {
+            width: 30%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            border-color: transparent;
         }
+        #table-wifi tr:nth-child(even){background-color: #f2f2f2;}
+
+        #table-wifi tr:hover {background-color: #ddd;}
+
+        small-table{
+          width: 20%;
+          border-collapse: collapse;
+          margin-top: 5px;
+          border-color: transparent;
+
+        }
+
+        td {
+            border: 1px solid #ccc;
+            padding: 5px;
+            color: black;
+        }
+
         .button {
             margin-top: 1px;
         }
     </style>
 </head>
-<body >
-    <h1>CONNECT</h1>
-    <div class="container">
-        <div class="box">
-            <p><span id="wifi1">Tên WiFi 1</span>
-	    <button class="button" onclick ="fillUsername('wifi1')">Connect</button>
-	</p>
-        </div>
-        <div class="box">
-            <p>Tên WiFi 2
-            <button class="button" onclick ="fillUsername('Tên WiFi 2')">Connect</button>
-	    </p>
-        </div>
-        <div class="box">
-            <p>Tên WiFi 3
-            <button class="button" onclick ="fillUsername('Tên WiFi 3')">Connect</button>
-	    </p>
-        </div>
-        <div class="box">
-            <p>Tên WiFi 4
-            <button class="button" onclick ="fillUsername('Tên WiFi 4')">Connect</button>
-	    </p>
-        </div>
-<div class="box">
-            <p>Tên WiFi 5
-            <button class="button" onclick ="fillUsername('Tên WiFi 5')">Connect</button>
-	    </p>
-        </div>
-    </div>
-    <form action="">
-User name:<br>
-<input type="text" name="userid" id="username">
-<br>
-User password:<br>
-<input type="password" name="psw">
+<body>
+  <h1>-------------------- </h1>
+  <div class="container">
+      <table class="table-wifi">
+          <tr>
+              <td><span id="wifi1">%WiFi1%</span></td>
+              <td><button class="button" onclick="fillUsername('button1')">Connect</button></td>
+          </tr>
+          <tr>
+              <td><span id="wifi2">%WiFi2%</span></td>
+              <td><button class="button" onclick="fillUsername('button2')">Connect</button></td>
+          </tr>
+          <tr>
+              <td><span id="wifi3">%WiFi3%</span></td>
+              <td><button class="button" onclick="fillUsername('button3')">Connect</button></td>
+          </tr>
+          <tr>
+            <td><span id="wifi4">%WiFi4%</span></td>
+            <td><button class="button" onclick="fillUsername('button4')">Connect</button></td>
+        </tr>
+        <tr>
+            <td><span id="wifi5">%WiFi5%</span></td>
+            <td><button class="button" onclick="fillUsername('button5')">Connect</button></td>
+        </tr>
+    </table>
+</div>
+<form action="">
+    User name:<br>
+    <input type="text" name="userid" id="username">
+    <br>
+    User password:<br>
+    <input type="password" name="psw" id="password">
 </form>
-    <div>
-        <button class="button" id="saveButton">Save</button>
-    </div>
+<div class="container">
+  <table class="small-table">
+    <tr>
+      <td><button class="button" onclick="scan()">Scan</button></td>
+      <td><button class="button" onclick="connect()">Save</button></td>
+    </tr>
+  </table>
+</div>
 <script>
+  var gateway = `ws://${window.location.hostname}/ws`;
+  var websocket;
+  window.addEventListener('load', onLoad);
+  function initWebSocket() {
+      console.log('Trying to open a WebSocket connection...');
+      websocket = new WebSocket(gateway);
+      websocket.onopen = onOpen;
+      websocket.onclose = onClose;
+      websocket.onmessage = onMessage;
+  }
+  function onOpen(event) {
+      console.log('Connection opened');
+  }
+  function onClose(event) {
+            console.log('Connection closed');
+            setTimeout(initWebSocket, 2000);
+        }
         function fillUsername(name) {
-            document.getElementById("username").value = name;
+            if (name == "button1") {
+                document.getElementById("username").value = document.getElementById("wifi1").textContent;
+            } else if (name == "button2") {
+                document.getElementById("username").value = document.getElementById("wifi2").textContent;
+            } else if (name == "button3") {
+                document.getElementById("username").value = document.getElementById("wifi3").textContent;
+            } else if (name == "button4") {
+                document.getElementById("username").value = document.getElementById("wifi4").textContent;
+            } else if (name == "button5") {
+                document.getElementById("username").value = document.getElementById("wifi5").textContent;
+            }
+        }
+        function onMessage(event) {
+            const receivedData = JSON.parse(event.data);
+            if (receivedData.ssid) {
+                const ssidArray = receivedData.ssid;
+                document.getElementById('wifi1').innerHTML = ssidArray[0];
+                document.getElementById('wifi2').innerHTML = ssidArray[1];
+                document.getElementById('wifi3').innerHTML = ssidArray[2];
+                document.getElementById('wifi4').innerHTML = ssidArray[3];
+                document.getElementById('wifi5').innerHTML = ssidArray[4];
+            }
+        }
+        function onLoad(event) {
+            initWebSocket();
+            initButton();
+        }
+        function initButton() {
+            document.getElementById('saveButton').addEventListener('click', savePass);
+        }
+        function scan() {
+            websocket.send('scan');
+        }
+        function login(sta_ssid, sta_pass) {
+            const wifiCredentials = { ssid: sta_ssid, password: sta_pass };
+            const jsonCredentials = JSON.stringify(wifiCredentials);
+            websocket.send(jsonCredentials);
+        }
+        function connect() {
+            const sta_ssid = document.getElementById("username").value;
+            let sta_pass = document.getElementById("password").value;
+            login(sta_ssid, sta_pass);
         }
     </script>
 </body>
