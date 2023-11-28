@@ -59,6 +59,11 @@
         <button class="button" onclick ="fillUsername('button5')">Connect</button>
     </p>
     </div>
+    <div class="box">
+        <p><span id="update"> </span>
+        <button class="button" onclick ="update()">update</button>
+    </p>
+    </div>
     </div>
     <form action="">
 User name:<br>
@@ -126,6 +131,9 @@ User password:<br>
     }
     function scan() {
         websocket.send('scan');
+    }
+    function update(){
+        websocket.send('update');
     }
     function login(sta_ssid,sta_pass){
         const wifiCredentials = { ssid: sta_ssid, password: sta_pass };
